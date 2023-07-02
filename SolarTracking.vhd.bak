@@ -1,0 +1,157 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity SolarTracking is
+	generic(
+		clk_freq										: natural:= 25e6
+	);
+	port
+	(
+		-- INPUTS --   
+		                                          ------------------------------------------------
+		LDR_ADC1_D1                : in std_logic;--            
+		LDR_ADC1_D2                : in std_logic;--
+		LDR_ADC1_D3                : in std_logic;-- 
+		LDR_ADC1_D4                : in std_logic;-- 1.LDR'ye bağlı ADC'den gelen dijital veriler
+		LDR_ADC1_D5                : in std_logic;--
+		LDR_ADC1_D6                : in std_logic;--
+		LDR_ADC1_D7                : in std_logic;--
+		LDR_ADC1_D8                : in std_logic;--
+		                                          -------------------------------------------------
+  		LDR_ADC2_D1                : in std_logic;--
+		LDR_ADC2_D2                : in std_logic;--
+		LDR_ADC2_D3                : in std_logic;--
+		LDR_ADC2_D4                : in std_logic;-- 2.LDR'ye bağlı ADC'den gelen dijital veriler
+		LDR_ADC2_D5                : in std_logic;--
+		LDR_ADC2_D6                : in std_logic;--
+		LDR_ADC2_D7                : in std_logic;--
+		LDR_ADC2_D8                : in std_logic;--
+		                                          -------------------------------------------------		
+		LDR_ADC3_D1                : in std_logic;--
+		LDR_ADC3_D2                : in std_logic;--
+		LDR_ADC3_D3                : in std_logic;--
+		LDR_ADC3_D4                : in std_logic;-- 3.LDR'ye bağlı ADC'den gelen dijital veriler
+		LDR_ADC3_D5                : in std_logic;--
+		LDR_ADC3_D6                : in std_logic;--
+		LDR_ADC3_D7                : in std_logic;--
+		LDR_ADC3_D8                : in std_logic;--
+		                                          -------------------------------------------------		
+		LDR_ADC4_D1                : in std_logic;--
+		LDR_ADC4_D2                : in std_logic;--
+		LDR_ADC4_D3                : in std_logic;--
+		LDR_ADC4_D4                : in std_logic;-- 4.LDR'ye bağlı ADC'den gelen dijital veriler
+		LDR_ADC4_D5                : in std_logic;--
+		LDR_ADC4_D6                : in std_logic;--
+		LDR_ADC4_D7                : in std_logic;--
+		LDR_ADC4_D8                : in std_logic;--
+		                                          -------------------------------------------------	
+		-- OUTPUTS --  
+		                                           -------------------------------------------------
+      STEP1_OUT1                 : out std_logic;--
+      STEP1_OUT2                 : out std_logic;-- 1.Step Motor Çıkış Pinleri 		
+      STEP1_OUT3                 : out std_logic;--		
+      STEP1_OUT4                 : out std_logic;--		
+		                                           -------------------------------------------------		
+      STEP2_OUT1                 : out std_logic;--
+      STEP2_OUT2                 : out std_logic;-- 2.Step Motor Çıkış Pinleri		
+      STEP2_OUT3                 : out std_logic;--		
+      STEP2_OUT4                 : out std_logic --		
+	);	                                           -------------------------------------------------	
+end entity;	
+		
+architecture rtl of SolarTracking is				
+	
+/*component fuzzy_logic	
+	generic(
+		clk_freq										: natural
+	);
+	port(
+
+	    );	
+end component;	*/
+
+component timer  
+	generic(
+		clk_frequency 	: integer; -- clock frequency in Hz
+		timer_value   	: integer  -- timer in microseconds (us)
+	);
+	port(
+		clk 				: in 	std_logic;
+		reset		   	: in 	std_logic;
+		timer_tick		: out std_logic
+	);
+end component;
+
+signal tick_10ms,	rst_10ms 	: std_logic;
+signal tick_20ms,	rst_20ms 	: std_logic;
+signal tick_50ms, rst_50ms 	: std_logic;
+signal tick_200ms, rst_200ms 	: std_logic;
+
+begin
+/*	flc: fuzzy_logic
+	generic map(
+		clk_freq										=> clk_freq
+	)
+	port map(  */
+
+	);
+	
+	timer_10ms: timer
+	generic map(
+		clk_frequency 	=> clk_freq,
+		timer_value 	=> 10000
+	)
+	port map(
+		clk 				=> clk,
+		reset 			=> rst_10ms,
+		timer_tick 		=> tick_10ms
+	);
+	
+	timer_20ms: timer
+	generic map(
+		clk_frequency 	=> clk_freq,
+		timer_value 	=> 20000
+	)
+	port map(
+		clk 				=> clk,
+		reset 			=> rst_20ms,
+		timer_tick 		=> tick_20ms
+	);		
+	
+	timer_50ms: timer
+	generic map(
+		clk_frequency 	=> clk_freq,
+		timer_value 	=> 50000
+	)
+	port map(
+		clk 				=> clk,
+		reset 			=> rst_50ms,
+		timer_tick 		=> tick_50ms
+	);		
+	
+	timer_200ms: timer
+	generic map(
+		clk_frequency 	=> clk_freq,
+		timer_value 	=> 200000
+	)
+	port map(
+		clk 				=> clk,
+		reset 			=> rst_200ms,
+		timer_tick 		=> tick_200ms
+	);
+		
+   process(all)
+	begin
+	
+	
+	end process;
+end rtl;		
+		
+		
+
+
+
+
+		
+		

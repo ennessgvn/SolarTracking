@@ -1,0 +1,534 @@
+-- fuzzy_rulebase.vhd
+-- This module implements the fuzzy rule base for controlling the output
+-- to the motors.  This module will accept 2 fuzzy inputs and will output
+-- a fuzzy control signal for each motor.  This will have to be fed into
+-- a defuzzification module to determine what the actual PWM will be.
+--
+
+-- Include the IEEE standard types
+--
+library ieee;
+use ieee.std_logic_1164.all;
+
+-- Include the mazebot configuration
+--
+library work;
+use work.config.all;
+
+entity fuzzy_rulebase is
+
+  port    ( clock       : in  std_logic;
+            reset       : in  std_logic;
+
+            -- There are 7 fuzzy linguistics so we require 3 bits for
+            -- representing the fuzzy data
+            --
+            difference  : in  std_logic_vector( 2 downto 0 );
+            integral    : in  std_logic_vector( 2 downto 0 );
+            valid_in    : in  std_logic;
+            valid_out   : out std_logic;
+            control     : out std_logic_vector( 2 downto 0 )
+          );
+
+end fuzzy_rulebase;
+
+-- Establish the rulebase
+--
+architecture rules of fuzzy_rulebase is
+
+  -- Internal outputs to be synchronized.
+  --
+  signal internal_control  : std_logic_vector( 2 downto 0 );
+
+  signal internal_control_pl  : std_logic_vector( 2 downto 0 );
+  signal internal_control_pm  : std_logic_vector( 2 downto 0 );
+  signal internal_control_ps  : std_logic_vector( 2 downto 0 );
+  signal internal_control_z   : std_logic_vector( 2 downto 0 );
+  signal internal_control_ns  : std_logic_vector( 2 downto 0 );
+  signal internal_control_nm  : std_logic_vector( 2 downto 0 );
+  signal internal_control_nl  : std_logic_vector( 2 downto 0 );
+
+begin
+
+  control_rules_pl : process
+  begin
+
+    -- Synchronize the process on the rising edge of the clock
+    --
+    wait until rising_edge( clock );
+
+    -- Set the outputs to zero when reset
+    --
+    if reset = '1' then
+
+      internal_control_pl  <= zero;
+
+    else
+
+      -- Implement the rule base for difference = plarge rules
+      --
+      if    difference = plarge  and integral = plarge  then
+
+        internal_control_pl  <= nmedium;
+
+      elsif difference = plarge  and integral = pmedium then
+
+        internal_control_pl  <= nsmall;
+
+      elsif difference = plarge  and integral = psmall  then
+
+        internal_control_pl  <= nsmall;
+
+      elsif difference = plarge  and integral = zero    then
+
+        internal_control_pl  <= plarge;
+
+      elsif difference = plarge  and integral = nsmall  then
+
+        internal_control_pl  <= plarge;
+
+      elsif difference = plarge  and integral = nmedium then
+
+        internal_control_pl  <= plarge;
+
+      elsif difference = plarge  and integral = nlarge  then
+
+        internal_control_pl  <= plarge;
+
+      else
+
+        -- If any other rule occurs, don't change the control
+        --
+        internal_control_pl  <= zero;
+
+      end if;    
+
+    end if;
+
+  end process control_rules_pl;
+
+  control_rules_pm : process
+  begin
+
+    -- Synchronize the process on the rising edge of the clock
+    --
+    wait until rising_edge( clock );
+
+    -- Set the outputs to zero when reset
+    --
+    if reset = '1' then
+
+      internal_control_pm  <= zero;
+
+    else
+
+      -- Implement the rule base for difference = pmedium case
+      --
+      if    difference = pmedium and integral = plarge  then
+
+        internal_control_pm  <= nmedium;
+
+      elsif difference = pmedium and integral = pmedium then
+
+        internal_control_pm  <= zero;
+
+      elsif difference = pmedium and integral = psmall  then
+
+        internal_control_pm  <= psmall;
+
+      elsif difference = pmedium and integral = zero    then
+
+        internal_control_pm  <= pmedium;
+
+      elsif difference = pmedium and integral = nsmall  then
+
+        internal_control_pm  <= pmedium;
+
+      elsif difference = pmedium and integral = nmedium then
+
+        internal_control_pm  <= plarge;
+
+      elsif difference = pmedium and integral = nlarge  then
+
+        internal_control_pm  <= plarge;
+
+      else
+
+        -- If any other rule occurs, don't change the control
+        --
+        internal_control_pm  <= zero;
+
+      end if;    
+
+    end if;
+
+  end process control_rules_pm;
+
+  control_rules_ps : process
+  begin
+
+    -- Synchronize the process on the rising edge of the clock
+    --
+    wait until rising_edge( clock );
+
+    -- Set the outputs to zero when reset
+    --
+    if reset = '1' then
+
+      internal_control_ps  <= zero;
+
+    else
+
+      -- Implement the rule base for difference = psmall
+      --
+      if    difference = psmall  and integral = plarge  then
+
+        internal_control_ps  <= nmedium;
+
+      elsif difference = psmall  and integral = pmedium then
+
+        internal_control_ps  <= nsmall;
+
+      elsif difference = psmall  and integral = psmall  then
+
+        internal_control_ps  <= zero;
+
+      elsif difference = psmall  and integral = zero    then
+
+        internal_control_ps  <= psmall;
+
+      elsif difference = psmall  and integral = nsmall  then
+
+        internal_control_ps  <= psmall;
+
+      elsif difference = psmall  and integral = nmedium then
+
+        internal_control_ps  <= pmedium;
+
+      elsif difference = psmall  and integral = nlarge  then
+
+        internal_control_ps  <= plarge;
+
+      else
+
+        -- If any unknown rules occur, don't change the control
+        --
+        internal_control_ps  <= zero;
+
+      end if;    
+
+    end if;
+
+  end process control_rules_ps;
+
+  control_rules_z : process
+  begin
+
+    -- Synchronize the process on the rising edge of the clock
+    --
+    wait until rising_edge( clock );
+
+    -- Set the outputs to zero when reset
+    --
+    if reset = '1' then
+
+      internal_control_z  <= zero;
+
+    else
+
+      -- Implement the rule base for difference = psmall
+      --
+      if    difference = psmall  and integral = plarge  then
+
+        internal_control_z  <= nlarge;
+
+      elsif difference = psmall  and integral = pmedium then
+
+        internal_control_z  <= nmedium;
+
+      elsif difference = psmall  and integral = psmall  then
+
+        internal_control_z  <= nsmall;
+
+      elsif difference = psmall  and integral = zero    then
+
+        internal_control_z  <= zero;
+
+      elsif difference = psmall  and integral = nsmall  then
+
+        internal_control_z  <= psmall;
+
+      elsif difference = psmall  and integral = nmedium then
+
+        internal_control_z  <= psmall;
+
+      elsif difference = psmall  and integral = nlarge  then
+
+        internal_control_z  <= pmedium;
+
+      else
+
+        -- If any unknown rules occur, don't change the control
+        --
+        internal_control_z  <= zero;
+
+      end if;    
+
+    end if;
+
+  end process control_rules_z;
+
+  control_rules_ns : process
+  begin
+
+    -- Synchronize the process on the rising edge of the clock
+    --
+    wait until rising_edge( clock );
+
+    -- Set the outputs to zero when reset
+    --
+    if reset = '1' then
+
+      internal_control_ns  <= zero;
+
+    else
+
+      -- Implement the rule base for difference = ns
+      --
+      if    difference = nsmall  and integral = plarge  then
+
+        internal_control_ns  <= nlarge;
+
+      elsif difference = nsmall  and integral = pmedium then
+
+        internal_control_ns  <= nmedium;
+
+      elsif difference = nsmall  and integral = psmall  then
+
+        internal_control_ns  <= nmedium;
+
+      elsif difference = nsmall  and integral = zero    then
+
+        internal_control_ns  <= nsmall;
+
+      elsif difference = nsmall  and integral = nsmall  then
+
+        internal_control_ns  <= zero;
+
+      elsif difference = nsmall  and integral = nmedium then
+
+        internal_control_ns  <= psmall;
+
+      elsif difference = nsmall  and integral = nlarge  then
+
+        internal_control_ns  <= pmedium;
+
+      else
+
+        -- If any unknown rules occur, don't change the control
+        --
+        internal_control_ns  <= zero;
+
+      end if;    
+
+    end if;
+
+  end process control_rules_ns;
+
+  control_rules_nm : process
+  begin
+
+    -- Synchronize the process on the rising edge of the clock
+    --
+    wait until rising_edge( clock );
+
+    -- Set the outputs to zero when reset
+    --
+    if reset = '1' then
+
+      internal_control_nm  <= zero;
+
+    else
+
+      -- Implement the rule base for difference = nm
+      --
+      if    difference = nmedium and integral = plarge  then
+
+        internal_control_nm  <= nlarge;
+
+      elsif difference = nmedium and integral = pmedium then
+
+        internal_control_nm  <= nlarge;
+
+      elsif difference = nmedium and integral = psmall  then
+
+        internal_control_nm  <= nmedium;
+
+      elsif difference = nmedium and integral = zero    then
+
+        internal_control_nm  <= nmedium;
+
+      elsif difference = nmedium and integral = nsmall  then
+
+        internal_control_nm  <= nsmall;
+
+      elsif difference = nmedium and integral = nmedium then
+
+        internal_control_nm  <= zero;
+
+      elsif difference = nmedium and integral = nlarge  then
+
+        internal_control_nm  <= psmall;
+
+      else
+
+        -- If any unknown rules occur, don't change the control
+        --
+        internal_control_nm  <= zero;
+
+      end if;    
+
+    end if;
+
+  end process control_rules_nm;
+
+  control_rules_nl : process
+  begin
+
+    -- Synchronize the process on the rising edge of the clock
+    --
+    wait until rising_edge( clock );
+
+    -- Set the outputs to zero when reset
+    --
+    if reset = '1' then
+
+      internal_control_nl  <= zero;
+
+    else
+
+      -- Implement the rule base for difference = nl
+      --
+      if    difference = nlarge  and integral = plarge  then
+
+        internal_control_nl  <= nlarge;
+
+      elsif difference = nlarge  and integral = pmedium then
+
+        internal_control_nl  <= nlarge;
+
+      elsif difference = nlarge  and integral = psmall  then
+
+        internal_control_nl  <= nlarge;
+
+      elsif difference = nlarge  and integral = zero    then
+
+        internal_control_nl  <= nlarge;
+
+      elsif difference = nlarge  and integral = nsmall  then
+
+        internal_control_nl  <= nmedium;
+
+      elsif difference = nlarge  and integral = nmedium then
+
+        internal_control_nl  <= nsmall;
+
+      elsif difference = nlarge  and integral = nlarge  then
+
+        internal_control_nl  <= zero;
+
+      else
+
+        -- If any unknown rules occur, don't change the control
+        --
+        internal_control_nl  <= zero;
+
+      end if;    
+
+    end if;
+
+  end process control_rules_nl;
+
+  control_out : process
+
+    function check( value : in std_logic_vector( 2 downto 0 ) ) return std_logic is
+
+      variable return_value : std_logic;
+
+    begin
+
+      if    internal_control_pl = value or
+            internal_control_pm = value or
+            internal_control_ps = value or
+            internal_control_z  = value or
+            internal_control_ns = value or
+            internal_control_nm = value or
+            internal_control_nl = value then
+
+        return_value := '1';
+
+      else
+
+        return_value := '0';
+
+      end if;
+
+      return return_value;
+
+    end function check;
+
+  begin
+
+    wait until rising_edge( clock );
+
+    if reset = '1' then
+
+      control  <= zero;
+
+    else
+
+      if    check( plarge ) = '1' then
+
+        control <= plarge;
+
+      elsif check( pmedium ) = '1' then
+
+        control <= pmedium;
+
+      elsif check( psmall ) = '1' then
+
+        control <= psmall;
+
+      elsif check( nsmall ) = '1' then
+
+        control <= nsmall;
+
+      elsif check( nmedium ) = '1' then
+
+        control <= nmedium;
+
+      elsif check( nlarge ) = '1' then
+
+        control <= nlarge;
+
+      else
+
+        control <= zero;
+
+      end if;
+
+    end if;
+
+  end process control_out;
+
+  -- Send the valid through the same number of levels
+  --
+  flop_valid : synchronizor generic map ( numberOfLevels => 2 )
+                            port    map ( 
+                                          clock          => clock,
+                                          reset          => reset,
+                                          input          => valid_in,
+                                          output         => valid_out
+                                        );
+
+end rules;
